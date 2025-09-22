@@ -1,8 +1,8 @@
 ﻿'use client';
 
-import { ENERGY_SCALE } from '../../lib/constants';
-import type { EnergyScore } from '../../lib/types';
-import { cn } from '../../lib/cn';
+import { ENERGY_SCALE } from '@/lib/constants';
+import type { EnergyScore } from '@/lib/types';
+import { cn } from '@/lib/cn';
 
 export interface EnergySelectorProps {
   value: EnergyScore;
@@ -32,3 +32,4 @@ export function EnergySelector({ value, onChange }: EnergySelectorProps) {
     </div>
   );
 }
+
