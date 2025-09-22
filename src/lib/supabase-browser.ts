@@ -15,10 +15,13 @@ export function createSupabaseBrowserClient(): SupabaseClient {
     throw new Error('Supabase URL or anon key is missing');
   }
 
-  browserClient = createBrowserSupabaseClient({
+  const client = createBrowserSupabaseClient({
     supabaseUrl,
     supabaseKey
-  });
+  }) as SupabaseClient;
+
+  browserClient = client;
 
   return browserClient;
 }
+
