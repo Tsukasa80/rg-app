@@ -37,8 +37,12 @@ const defaultValues: ActivityEntryFormValues = {
 };
 
 export function ActivityEntryForm({ initialValues, onSubmit, submitting }: ActivityEntryFormProps) {
-  const [values, setValues] = useState<ActivityEntryFormValues>({ ...defaultValues, ...initialValues });\n  useEffect(() => {\n    setValues({ ...defaultValues, ...initialValues });\n  }, [initialValues]);
+  const [values, setValues] = useState<ActivityEntryFormValues>({ ...defaultValues, ...initialValues });
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setValues({ ...defaultValues, ...initialValues });
+  }, [initialValues]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,10 +62,7 @@ export function ActivityEntryForm({ initialValues, onSubmit, submitting }: Activ
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="space-y-4">
-        <ActivityTypeToggle
-          value={values.type}
-          onChange={(type) => setValues((prev) => ({ ...prev, type }))}
-        />
+        <ActivityTypeToggle value={values.type} onChange={(type) => setValues((prev) => ({ ...prev, type }))} />
         <div>
           <label className="block text-sm font-medium text-slate-200">活動名</label>
           <Input
@@ -108,7 +109,10 @@ export function ActivityEntryForm({ initialValues, onSubmit, submitting }: Activ
               min={0}
               value={values.durationMin?.toString() ?? ''}
               onChange={(event) =>
-                setValues((prev) => ({ ...prev, durationMin: event.target.value ? Number(event.target.value) : undefined }))
+                setValues((prev) => ({
+                  ...prev,
+                  durationMin: event.target.value ? Number(event.target.value) : undefined
+                }))
               }
               placeholder="例: 45"
             />
@@ -119,7 +123,9 @@ export function ActivityEntryForm({ initialValues, onSubmit, submitting }: Activ
           <Input
             type="datetime-local"
             value={values.occurredAt.slice(0, 16)}
-            onChange={(event) => setValues((prev) => ({ ...prev, occurredAt: new Date(event.target.value).toISOString() }))}
+            onChange={(event) =>
+              setValues((prev) => ({ ...prev, occurredAt: new Date(event.target.value).toISOString() }))
+            }
           />
         </div>
       </div>
@@ -136,4 +142,3 @@ export function ActivityEntryForm({ initialValues, onSubmit, submitting }: Activ
     </form>
   );
 }
-
