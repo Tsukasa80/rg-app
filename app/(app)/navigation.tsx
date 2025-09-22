@@ -1,15 +1,16 @@
 ﻿"use client";
 
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
 
 const navItems = [
-  { href: '/', label: 'ホーム' },
-  { href: '/history', label: '履歴' },
-  { href: '/weekly', label: '週次' },
-  { href: '/dashboard', label: 'ダッシュボード' }
-];
+  { href: '/' as Route, label: 'ホーム' },
+  { href: '/history' as Route, label: '履歴' },
+  { href: '/weekly' as Route, label: '週次' },
+  { href: '/dashboard' as Route, label: 'ダッシュボード' }
+] as const;
 
 export function Navigation() {
   const pathname = usePathname();
