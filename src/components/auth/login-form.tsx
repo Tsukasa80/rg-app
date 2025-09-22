@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useMemo, useState } from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -8,7 +9,7 @@ import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 export function LoginForm() {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabase = useMemo<SupabaseClient>(() => createSupabaseBrowserClient(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
