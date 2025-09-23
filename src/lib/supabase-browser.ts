@@ -1,9 +1,9 @@
 ﻿import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import type { SupabaseClient } from '@supabase/supabase-js';
+type BrowserClient = ReturnType<typeof createBrowserSupabaseClient>;
 
-let browserClient: SupabaseClient | undefined;
+let browserClient: BrowserClient | undefined;
 
-export function createSupabaseBrowserClient(): SupabaseClient {
+export function createSupabaseBrowserClient(): BrowserClient {
   if (browserClient) {
     return browserClient;
   }
@@ -18,10 +18,9 @@ export function createSupabaseBrowserClient(): SupabaseClient {
   const client = createBrowserSupabaseClient({
     supabaseUrl,
     supabaseKey
-  }) as SupabaseClient;
+  });
 
   browserClient = client;
 
   return browserClient;
 }
-
