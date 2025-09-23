@@ -1,4 +1,4 @@
-﻿import { differenceInCalendarDays, formatISO, parseISO } from 'date-fns';
+﻿import { differenceInCalendarDays, formatISO, parseISO, getISOWeek, getISOWeekYear } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
 export function formatDateTime(value: string | Date) {
@@ -22,25 +22,20 @@ export function startOfIsoWeek(date: Date) {
 }
 
 export function isoWeekIdentifier(date: Date) {
-  const start = startOfIsoWeek(date);
-  const year = start.getFullYear();
-  const week = Number(new Intl.DateTimeFormat('en-GB-u-ca-iso8601', {
-    weekNumber: 'numeric'
-  }).format(date));
-  return { year, isoWeek: week, identifier: year * 100 + week };
+  const isoWeek = getISOWeek(date);
+  const year = getISOWeekYear(date);
+  return { year, isoWeek, identifier: year * 100 + isoWeek };
 }
 
 export function isoWeekRange(identifier: number) {
   const year = Math.floor(identifier / 100);
   const week = identifier % 100;
-  const simple = new Date(year, 0, 1 + (week - 1) * 7);
-  const dow = simple.getDay();
-  const ISOweekStart = dow <= 4 ? new Date(simple.setDate(simple.getDate() - simple.getDay() + 1)) : new Date(simple.setDate(simple.getDate() + 8 - simple.getDay()));
-  const ISOweekEnd = new Date(ISOweekStart);
-  ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
-  return { start: ISOweekStart, end: ISOweekEnd };
+  const reference = new Date(year, 0, 4);
+  const start = startOfIsoWeek(new Date(reference.setDate(reference.getDate() + (week - 1) * 7)));
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return { start, end };
 }
-
 export function calcMedian(values: number[]) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -72,3 +67,5 @@ export function formatIsoDateTime(value: Date) {
 }
 
 export const dateLocale = ja;
+
+
