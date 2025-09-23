@@ -1,7 +1,7 @@
 ﻿import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseServerActionClient } from '@/lib/supabase-server';
 
 const EntrySchema = z.object({
   id: z.string().uuid().optional(),
@@ -39,7 +39,7 @@ const ImportSchema = z.object({
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerActionClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       duration_min: entry.duration_min,
       tags: entry.tags ?? []
     }));
-    const { error } = await supabase.from('activity_entries').upsert(formatted, { onConflict: 'id' });
+    const { error } = await (supabase.from as any)('activity_entries').upsert(formatted as any, { onConflict: 'id' });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   if (payload.weekly) {
     const { year, iso_week } = payload.weekly;
     if (payload.weekly.green_best_ids?.length) {
-      const { error } = await supabase.from('weekly_selections').upsert({
+      const { error } = await (supabase.from as any)('weekly_selections').upsert({
         user_id: user.id,
         year,
         iso_week,
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       }
     }
     if (payload.weekly.red_worst_ids?.length) {
-      const { error } = await supabase.from('weekly_selections').upsert({
+      const { error } = await (supabase.from as any)('weekly_selections').upsert({
         user_id: user.id,
         year,
         iso_week,
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       }
     }
     if (payload.weekly.reflection) {
-      const { error } = await supabase.from('weekly_reflections').upsert({
+      const { error } = await (supabase.from as any)('weekly_reflections').upsert({
         user_id: user.id,
         year,
         iso_week,

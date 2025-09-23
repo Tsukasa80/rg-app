@@ -43,7 +43,7 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
     const filtered = rows.filter((row) => {
       if (filters?.types?.length && !filters.types.includes(row.type)) return false;
       if (filters?.tags?.length && !filters.tags.every((t) => row.tags.includes(t))) return false;
-      if (filters?.energyScores?.length && !filters.energyScores.includes(row.energy_score)) return false;
+      if (filters?.energyScores?.length && !filters.energyScores.includes(row.energy_score as any)) return false;
       if (filters?.from && row.occurred_at < filters.from) return false;
       if (filters?.to && row.occurred_at > filters.to) return false;
       if (filters?.search) {
@@ -105,8 +105,7 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
     return mapEntry(row);
   }
   const supabase = createSupabaseServerActionClient();
-  const { data, error } = await supabase
-    .from('activity_entries')
+  const { data, error } = await (supabase.from as any)('activity_entries')
     .insert({
       user_id: userId,
       occurred_at: payload.occurredAt,
@@ -116,7 +115,7 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
       energy_score: payload.energyScore,
       duration_min: payload.durationMin,
       tags: payload.tags
-    })
+    } as any)
     .select()
     .single();
 
@@ -152,8 +151,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
     return mapEntry(updated);
   }
   const supabase = createSupabaseServerActionClient();
-  const { data, error } = await supabase
-    .from('activity_entries')
+  const { data, error } = await (supabase.from as any)('activity_entries')
     .update({
       ...('occurredAt' in payload ? { occurred_at: payload.occurredAt } : {}),
       ...('type' in payload ? { type: payload.type } : {}),
@@ -163,7 +161,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
       ...('durationMin' in payload ? { duration_min: payload.durationMin } : {}),
       ...('tags' in payload ? { tags: payload.tags } : {}),
       updated_at: new Date().toISOString()
-    })
+    } as any)
     .eq('user_id', userId)
     .eq('id', entryId)
     .select()
@@ -193,8 +191,7 @@ export async function deleteActivity(userId: string, entryId: string) {
     return;
   }
   const supabase = createSupabaseServerActionClient();
-  const { error } = await supabase
-    .from('activity_entries')
+  const { error } = await (supabase.from as any)('activity_entries')
     .delete()
     .eq('user_id', userId)
     .eq('id', entryId);
@@ -228,8 +225,7 @@ export async function fetchWeeklySelection(userId: string, year: number, isoWeek
     };
   }
   const supabase = createSupabaseServerComponentClient();
-  const { data, error } = await supabase
-    .from('weekly_selections')
+  const { data, error } = await (supabase.from as any)('weekly_selections')
     .select('*')
     .eq('user_id', userId)
     .eq('year', year)
@@ -287,9 +283,8 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
     notes: Object.fromEntries(Object.entries(notes).map(([entryId, hypothesis]) => [entryId, { hypothesis }]))
   };
 
-  const { error } = await supabase
-    .from('weekly_selections')
-    .upsert(payload, { onConflict: 'user_id,year,iso_week,type' });
+  const { error } = await (supabase.from as any)('weekly_selections')
+    .upsert(payload as any, { onConflict: 'user_id,year,iso_week,type' });
 
   if (error) {
     console.error(error);
@@ -324,9 +319,8 @@ export async function upsertWeeklyReflection(userId: string, year: number, isoWe
     summary: answers.summary
   };
 
-  const { error } = await supabase
-    .from('weekly_reflections')
-    .upsert(payload, { onConflict: 'user_id,year,iso_week' });
+  const { error } = await (supabase.from as any)('weekly_reflections')
+    .upsert(payload as any, { onConflict: 'user_id,year,iso_week' });
 
   if (error) {
     console.error(error);
