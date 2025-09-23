@@ -1,6 +1,7 @@
 ﻿'use server';
 
-import { createSupabaseServerClient } from '../lib/supabase-server';
+import { createSupabaseServerComponentClient } from '../lib/supabase-server';
+import { LocalDB, OFFLINE_MODE } from '../lib/local-db';
 import type { ActivityEntry, WeeklySummary } from '../lib/types';
 import { calcMedian } from '../lib/utils';
 
@@ -20,7 +21,46 @@ function mapEntry(row: any): ActivityEntry {
 }
 
 export async function fetchWeeklySummary(userId: string, from: string, to: string): Promise<{ entries: ActivityEntry[]; summary: WeeklySummary }> {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const rows = LocalDB
+      .listEntries(userId)
+      .filter((r) => r.occurred_at >= from && r.occurred_at <= to)
+      .sort((a, b) => (a.occurred_at < b.occurred_at ? -1 : 1));
+    const entries = rows.map(mapEntry);
+    const energyScores = entries.map((entry) => entry.energyScore);
+    const totalEnergy = energyScores.reduce<number>((acc, score) => acc + score, 0);
+    const durationSum = entries.reduce((acc, entry) => acc + (entry.durationMin ?? 0), 0);
+    const greenCount = entries.filter((entry) => entry.type === 'GREEN').length;
+    const redCount = entries.filter((entry) => entry.type === 'RED').length;
+
+    const tagAggregate = new Map<string, { count: number; energyTotal: number }>();
+    for (const entry of entries) {
+      for (const tag of entry.tags) {
+        const current = tagAggregate.get(tag) ?? { count: 0, energyTotal: 0 };
+        tagAggregate.set(tag, {
+          count: current.count + 1,
+          energyTotal: current.energyTotal + entry.energyScore
+        });
+      }
+    }
+
+    const topTags = Array.from(tagAggregate.entries())
+      .map(([tag, value]) => ({ tag, count: value.count, averageEnergy: value.energyTotal / value.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const summary: WeeklySummary = {
+      greenCount,
+      redCount,
+      averageEnergy: energyScores.length ? totalEnergy / energyScores.length : 0,
+      medianEnergy: calcMedian(energyScores),
+      durationMinutes: durationSum,
+      topTags
+    };
+
+    return { entries, summary };
+  }
+  const supabase = createSupabaseServerComponentClient();
   const { data, error } = await supabase
     .from('activity_entries')
     .select('*')
@@ -36,6 +76,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
 
   const entries = data.map(mapEntry);
   const energyScores = entries.map((entry) => entry.energyScore);
+  const totalEnergy = energyScores.reduce<number>((acc, score) => acc + score, 0);
   const durationSum = entries.reduce((acc, entry) => acc + (entry.durationMin ?? 0), 0);
   const greenCount = entries.filter((entry) => entry.type === 'GREEN').length;
   const redCount = entries.filter((entry) => entry.type === 'RED').length;
@@ -63,7 +104,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
   const summary: WeeklySummary = {
     greenCount,
     redCount,
-    averageEnergy: energyScores.length ? energyScores.reduce((acc, score) => acc + score, 0) / energyScores.length : 0,
+    averageEnergy: energyScores.length ? totalEnergy / energyScores.length : 0,
     medianEnergy: calcMedian(energyScores),
     durationMinutes: durationSum,
     topTags
@@ -71,3 +112,4 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
 
   return { entries, summary };
 }
+

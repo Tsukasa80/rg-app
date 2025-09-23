@@ -1,7 +1,8 @@
 ﻿'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createSupabaseServerClient } from '../lib/supabase-server';
+import { createSupabaseServerActionClient, createSupabaseServerComponentClient } from '../lib/supabase-server';
+import { LocalDB, OFFLINE_MODE } from '../lib/local-db';
 import type {
   ActivityEntry,
   ActivityFilterState,
@@ -37,7 +38,25 @@ function mapEntry(row: any): ActivityEntry {
 }
 
 export async function fetchActivities(userId: string, filters?: Partial<ActivityFilterState>) {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const rows = LocalDB.listEntries(userId).sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+    const filtered = rows.filter((row) => {
+      if (filters?.types?.length && !filters.types.includes(row.type)) return false;
+      if (filters?.tags?.length && !filters.tags.every((t) => row.tags.includes(t))) return false;
+      if (filters?.energyScores?.length && !filters.energyScores.includes(row.energy_score)) return false;
+      if (filters?.from && row.occurred_at < filters.from) return false;
+      if (filters?.to && row.occurred_at > filters.to) return false;
+      if (filters?.search) {
+        const s = filters.search.toLowerCase();
+        const inTitle = row.title.toLowerCase().includes(s);
+        const inNote = (row.note ?? '').toLowerCase().includes(s);
+        if (!inTitle && !inNote) return false;
+      }
+      return true;
+    });
+    return filtered.map(mapEntry);
+  }
+  const supabase = createSupabaseServerComponentClient();
   let query = supabase.from('activity_entries').select('*').eq('user_id', userId).order('occurred_at', { ascending: false });
 
   if (filters?.types?.length) {
@@ -68,7 +87,24 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
 }
 
 export async function createActivity(userId: string, payload: ActivityPayload) {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const row = LocalDB.insertEntry({
+      user_id: userId,
+      occurred_at: payload.occurredAt,
+      type: payload.type,
+      title: payload.title,
+      note: payload.note,
+      energy_score: payload.energyScore,
+      duration_min: payload.durationMin,
+      tags: payload.tags,
+      updated_at: undefined
+    });
+    revalidatePath('/');
+    revalidatePath('/history');
+    revalidatePath('/weekly');
+    return mapEntry(row);
+  }
+  const supabase = createSupabaseServerActionClient();
   const { data, error } = await supabase
     .from('activity_entries')
     .insert({
@@ -96,7 +132,26 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
 }
 
 export async function updateActivity(userId: string, entryId: string, payload: Partial<ActivityPayload>) {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const patch: any = {
+      ...('occurredAt' in payload ? { occurred_at: payload.occurredAt } : {}),
+      ...('type' in payload ? { type: payload.type } : {}),
+      ...('title' in payload ? { title: payload.title } : {}),
+      ...('note' in payload ? { note: payload.note } : {}),
+      ...('energyScore' in payload ? { energy_score: payload.energyScore } : {}),
+      ...('durationMin' in payload ? { duration_min: payload.durationMin } : {}),
+      ...('tags' in payload ? { tags: payload.tags } : {})
+    };
+    const updated = LocalDB.updateEntry(entryId, patch);
+    if (!updated || updated.user_id !== userId) {
+      throw new Error('�����̍X�V�Ɏ��s���܂���');
+    }
+    revalidatePath('/');
+    revalidatePath('/history');
+    revalidatePath('/weekly');
+    return mapEntry(updated);
+  }
+  const supabase = createSupabaseServerActionClient();
   const { data, error } = await supabase
     .from('activity_entries')
     .update({
@@ -126,7 +181,18 @@ export async function updateActivity(userId: string, entryId: string, payload: P
 }
 
 export async function deleteActivity(userId: string, entryId: string) {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const ok = LocalDB.deleteEntry(userId, entryId);
+    if (!ok) {
+      console.error('offline delete failed');
+      throw new Error('�����̍폜�Ɏ��s���܂���');
+    }
+    revalidatePath('/');
+    revalidatePath('/history');
+    revalidatePath('/weekly');
+    return;
+  }
+  const supabase = createSupabaseServerActionClient();
   const { error } = await supabase
     .from('activity_entries')
     .delete()
@@ -144,7 +210,24 @@ export async function deleteActivity(userId: string, entryId: string) {
 }
 
 export async function fetchWeeklySelection(userId: string, year: number, isoWeek: number, type: WeeklySelectionType): Promise<WeeklySelection | null> {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    const data: any = LocalDB.getWeeklySelection(userId, year, isoWeek, type);
+    if (!data) return null;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      isoWeek: data.iso_week,
+      year: data.year,
+      type: data.type,
+      entryIds: data.entry_ids ?? [],
+      notes: Object.entries((data.notes as Record<string, { hypothesis: string }> | null) ?? {}).map(([entryId, value]) => ({
+        entryId,
+        hypothesis: value.hypothesis
+      })),
+      updatedAt: data.updated_at ?? data.created_at
+    };
+  }
+  const supabase = createSupabaseServerComponentClient();
   const { data, error } = await supabase
     .from('weekly_selections')
     .select('*')
@@ -177,11 +260,24 @@ export async function fetchWeeklySelection(userId: string, year: number, isoWeek
 }
 
 export async function upsertWeeklySelection(userId: string, year: number, isoWeek: number, type: WeeklySelectionType, entryIds: string[], notes: Record<string, string>) {
+  if (OFFLINE_MODE) {
+    const payload = {
+      user_id: userId,
+      year,
+      iso_week: isoWeek,
+      type,
+      entry_ids: entryIds,
+      notes: Object.fromEntries(Object.entries(notes).map(([entryId, hypothesis]) => [entryId, { hypothesis }])) as Record<string, { hypothesis: string }>
+    };
+    LocalDB.upsertWeeklySelection(payload);
+    revalidatePath('/weekly');
+    return;
+  }
   if (entryIds.length > MAX_WEEKLY_SELECTION) {
     throw new Error(`選定できるのは最大${MAX_WEEKLY_SELECTION}件までです`);
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerActionClient();
   const payload = {
     user_id: userId,
     year,
@@ -204,7 +300,20 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
 }
 
 export async function upsertWeeklyReflection(userId: string, year: number, isoWeek: number, answers: Pick<WeeklyReflection, 'q1' | 'q2' | 'q3' | 'summary'>) {
-  const supabase = createSupabaseServerClient();
+  if (OFFLINE_MODE) {
+    LocalDB.upsertWeeklyReflection({
+      user_id: userId,
+      year,
+      iso_week: isoWeek,
+      q1: answers.q1,
+      q2: answers.q2,
+      q3: answers.q3,
+      summary: answers.summary
+    });
+    revalidatePath('/weekly');
+    return;
+  }
+  const supabase = createSupabaseServerActionClient();
   const payload = {
     user_id: userId,
     year,
