@@ -32,3 +32,8 @@ export function createSupabaseServerActionClient(): ServerActionClient {
     { supabaseUrl, supabaseKey }
   );
 }
+
+// Backward-compatible alias for older imports
+export function createSupabaseServerClient() {
+  return createSupabaseServerActionClient();
+}
