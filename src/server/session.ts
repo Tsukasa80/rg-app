@@ -3,14 +3,21 @@
 import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
 import { createSupabaseServerComponentClient } from '../lib/supabase-server';
+import { OFFLINE_MODE } from '../lib/local-db';
 
 // 既存互換: 必要時にSupabaseのユーザー情報を取得
 export async function getCurrentUser() {
-  const supabase = createSupabaseServerComponentClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  return user;
+  if (OFFLINE_MODE) return null;
+  try {
+    const supabase = createSupabaseServerComponentClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+    return user;
+  } catch (e) {
+    console.error('getCurrentUser failed:', e);
+    return null;
+  }
 }
 
 // サインイン不要運用: 実効ユーザーID（サインイン済み or ゲストID）を返す
