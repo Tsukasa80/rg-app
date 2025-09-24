@@ -1,10 +1,17 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { randomUUID } from 'crypto';
 
 export const OFFLINE_MODE = !process.env.NEXT_PUBLIC_SUPABASE_URL || /example\./i.test(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Vercel などのサーバーレス環境では /tmp のみ書き込み可能
+// 本番や Vercel 環境では /tmp 配下を使用し、ローカル開発では ./.data を使用
+const isVercel = !!process.env.VERCEL;
+const defaultDataDir = isVercel || process.env.NODE_ENV === 'production'
+  ? path.join(os.tmpdir(), 'rg-app-data')
+  : path.join(process.cwd(), '.data');
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : defaultDataDir;
 const ENTRIES_FILE = path.join(DATA_DIR, 'activity_entries.json');
 const WEEKLY_SEL_FILE = path.join(DATA_DIR, 'weekly_selections.json');
 const WEEKLY_REF_FILE = path.join(DATA_DIR, 'weekly_reflections.json');
@@ -129,4 +136,3 @@ export const LocalDB = {
     writeJson(WEEKLY_REF_FILE, all);
   }
 };
-
