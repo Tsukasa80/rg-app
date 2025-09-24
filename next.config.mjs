@@ -1,8 +1,7 @@
 ﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    typedRoutes: true,
-    serverActions: true
+    typedRoutes: true
   },
   output: 'standalone',
   reactStrictMode: true,

@@ -1,6 +1,7 @@
-﻿create table if not exists activity_entries (
+create table if not exists activity_entries (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  -- ゲスト運用を許容するため user_id は text（認証ユーザーは uid を文字列で格納）
+  user_id text not null,
   occurred_at timestamptz not null,
   type text not null check (type in ('GREEN','RED')),
   title text not null,
@@ -14,7 +15,7 @@
 
 create table if not exists weekly_selections (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id text not null,
   iso_week int not null,
   year int not null,
   type text not null check (type in ('GREEN_BEST','RED_WORST')),
@@ -27,7 +28,7 @@ create table if not exists weekly_selections (
 
 create table if not exists weekly_reflections (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id text not null,
   iso_week int not null,
   year int not null,
   q1 text,
@@ -38,3 +39,4 @@ create table if not exists weekly_reflections (
   updated_at timestamptz default now(),
   unique (user_id, year, iso_week)
 );
+

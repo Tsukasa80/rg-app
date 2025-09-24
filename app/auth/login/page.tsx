@@ -1,5 +1,7 @@
 ﻿import { LoginForm } from '@/components/auth/login-form';
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center space-y-6">

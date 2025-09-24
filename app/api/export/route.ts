@@ -1,10 +1,10 @@
-﻿import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { NextResponse } from 'next/server';
+import { createSupabaseServerActionClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerActionClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
@@ -15,8 +15,18 @@ export async function GET() {
 
   const [entries, selections, reflections] = await Promise.all([
     supabase.from('activity_entries').select('*').eq('user_id', user.id).order('occurred_at', { ascending: true }),
-    supabase.from('weekly_selections').select('*').eq('user_id', user.id).order('year', { ascending: true }).order('iso_week', { ascending: true }),
-    supabase.from('weekly_reflections').select('*').eq('user_id', user.id).order('year', { ascending: true }).order('iso_week', { ascending: true })
+    supabase
+      .from('weekly_selections')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('year', { ascending: true })
+      .order('iso_week', { ascending: true }),
+    supabase
+      .from('weekly_reflections')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('year', { ascending: true })
+      .order('iso_week', { ascending: true })
   ]);
 
   if (entries.error) {
@@ -44,3 +54,4 @@ export async function GET() {
     }
   });
 }
+

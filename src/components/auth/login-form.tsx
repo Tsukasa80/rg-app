@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -8,7 +8,11 @@ import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 export function LoginForm() {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabaseRef = useRef<ReturnType<typeof createSupabaseBrowserClient> | null>(null);
+  useEffect(() => {
+    // Initialize only on client to avoid build-time env evaluation
+    supabaseRef.current = createSupabaseBrowserClient();
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +23,11 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
     try {
+      const supabase = supabaseRef.current;
+      if (!supabase) {
+        setError('クライアントを初期化中です。少し待ってからお試しください。');
+        return;
+      }
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError(signInError.message);
@@ -36,6 +45,12 @@ export function LoginForm() {
   async function handleGoogle() {
     setLoading(true);
     try {
+      const supabase = supabaseRef.current;
+      if (!supabase) {
+        setError('クライアントを初期化中です。少し待ってからお試しください。');
+        setLoading(false);
+        return;
+      }
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback` }

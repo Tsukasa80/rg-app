@@ -1,23 +1,27 @@
-﻿import { endOfMonth, startOfMonth } from 'date-fns';
-import { getCurrentUser } from '@/server/session';
+import { endOfMonth, startOfMonth } from 'date-fns';
+import { getUserIdOrGuest } from '@/server/session';
 import { isoWeekIdentifier, isoWeekRange } from '@/lib/utils';
 import { fetchWeeklySummary } from '@/server/analytics-service';
 import { DashboardClient } from './dashboard-client';
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return <p className="text-slate-400">ダッシュボードを表示するにはログインしてください。</p>;
-  }
+  const userId = await getUserIdOrGuest();
 
   const now = new Date();
   const { identifier } = isoWeekIdentifier(now);
   const weekRange = isoWeekRange(identifier);
-  const weekly = await fetchWeeklySummary(user.id, weekRange.start.toISOString(), weekRange.end.toISOString());
+  let weekly: any = { summary: { greenCount: 0, redCount: 0, averageEnergy: 0, medianEnergy: 0, durationMinutes: 0, topTags: [] }, entries: [] };
 
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
-  const monthly = await fetchWeeklySummary(user.id, monthStart.toISOString(), monthEnd.toISOString());
+  let monthly: any = { summary: { greenCount: 0, redCount: 0, averageEnergy: 0, medianEnergy: 0, durationMinutes: 0, topTags: [] }, entries: [] };
+  try {
+    weekly = await fetchWeeklySummary(userId, weekRange.start.toISOString(), weekRange.end.toISOString());
+    monthly = await fetchWeeklySummary(userId, monthStart.toISOString(), monthEnd.toISOString());
+  } catch (e) {
+    console.error('DashboardPage load failed:', e);
+  }
 
   return (
     <DashboardClient

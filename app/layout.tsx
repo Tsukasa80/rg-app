@@ -2,6 +2,7 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { PwaProvider } from '@/components/pwa-provider';
+import { GuestProvider } from '@/components/guest-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     'Capture and review energy-giving (green) and energy-draining (red) activities with weekly reflections.',
   manifest: '/manifest.webmanifest',
   icons: {
+    icon: '/icons/icon-192x192.png',
     apple: '/icons/icon-192x192.png'
   }
 };
@@ -25,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-slate-950 text-slate-100">
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
           <PwaProvider />
+          <GuestProvider />
           {children}
         </div>
       </body>
