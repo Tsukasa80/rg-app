@@ -81,7 +81,7 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
   const { data, error } = await query;
   if (error) {
     console.error(error);
-    throw new Error('Šˆ“®‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('æ´»å‹•ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
   return data.map(mapEntry);
 }
@@ -121,7 +121,7 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
 
   if (error) {
     console.error(error);
-    throw new Error('Šˆ“®‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('æ´»å‹•ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   revalidatePath('/');
@@ -169,7 +169,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
 
   if (error) {
     console.error(error);
-    throw new Error('Šˆ“®‚ÌXV‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('æ´»å‹•ã®æ›´æ–°ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   revalidatePath('/');
@@ -198,7 +198,7 @@ export async function deleteActivity(userId: string, entryId: string) {
 
   if (error) {
     console.error(error);
-    throw new Error('Šˆ“®‚Ìíœ‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('æ´»å‹•ã®å‰Šé™¤ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   revalidatePath('/');
@@ -235,7 +235,7 @@ export async function fetchWeeklySelection(userId: string, year: number, isoWeek
 
   if (error) {
     console.error(error);
-    throw new Error('TŸ‘I’è‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('é€±æ¬¡é¸å®šã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   if (!data) return null;
@@ -270,7 +270,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
     return;
   }
   if (entryIds.length > MAX_WEEKLY_SELECTION) {
-    throw new Error(`‘I’è‚Å‚«‚é‚Ì‚ÍÅ‘å${MAX_WEEKLY_SELECTION}Œ‚Ü‚Å‚Å‚·`);
+    throw new Error(`é¸å®šã§ãã‚‹ã®ã¯æœ€å¤§${MAX_WEEKLY_SELECTION}ä»¶ã¾ã§ã§ã™`);
   }
 
   const supabase = createSupabaseServerActionClient();
@@ -288,7 +288,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
 
   if (error) {
     console.error(error);
-    throw new Error('TŸ‘I’è‚Ì•Û‘¶‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('é€±æ¬¡é¸å®šã®ä¿å­˜ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   revalidatePath('/weekly');
@@ -324,7 +324,7 @@ export async function upsertWeeklyReflection(userId: string, year: number, isoWe
 
   if (error) {
     console.error(error);
-    throw new Error('TŸU‚è•Ô‚è‚Ì•Û‘¶‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('é€±æ¬¡æŒ¯ã‚Šè¿”ã‚Šã®ä¿å­˜ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   revalidatePath('/weekly');

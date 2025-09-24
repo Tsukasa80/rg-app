@@ -71,7 +71,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
 
   if (error) {
     console.error(error);
-    throw new Error('TŸƒf[ƒ^‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
+    throw new Error('é€±æ¬¡ãƒ‡ãƒ¼ã‚¿ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
   }
 
   const entries = data.map(mapEntry);
