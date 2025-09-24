@@ -34,6 +34,8 @@ export function isoWeekRange(identifier: number) {
   const start = startOfIsoWeek(new Date(reference.setDate(reference.getDate() + (week - 1) * 7)));
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
+  // end-of-day inclusive to avoid excluding the last day
+  end.setHours(23, 59, 59, 999);
   return { start, end };
 }
 export function calcMedian(values: number[]) {
