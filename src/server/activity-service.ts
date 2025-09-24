@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createSupabaseServerActionClient, createSupabaseServerComponentClient } from '../lib/supabase-server';
 import { LocalDB, OFFLINE_MODE } from '../lib/local-db';
 import type {
@@ -81,12 +82,22 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
   const { data, error } = await query;
   if (error) {
     console.error(error);
-    throw new Error('活動の取得に失敗しました');
+    throw new Error('豢ｻ蜍輔・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆');
   }
   return data.map(mapEntry);
 }
 
-export async function createActivity(userId: string, payload: ActivityPayload) {
+
+  // Ensure guest cookie exists for offline mode so SSR revalidation sees the same userId
+  if (OFFLINE_MODE) {
+    try {
+      const store = cookies();
+      const has = store.get('guest_id')?.value;
+      if (!has && userId?.startsWith('guest_')) {
+        store.set('guest_id', userId, { path: '/', sameSite: 'lax', httpOnly: false, maxAge: 60 * 60 * 24 * 365 });
+      }
+    } catch {}
+  }
   if (OFFLINE_MODE) {
     const row = LocalDB.insertEntry({
       user_id: userId,
@@ -121,7 +132,7 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
 
   if (error) {
     console.error(error);
-    throw new Error('活動の作成に失敗しました');
+    throw new Error('豢ｻ蜍輔・菴懈・縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   revalidatePath('/');
@@ -169,7 +180,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
 
   if (error) {
     console.error(error);
-    throw new Error('活動の更新に失敗しました');
+    throw new Error('豢ｻ蜍輔・譖ｴ譁ｰ縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   revalidatePath('/');
@@ -198,7 +209,7 @@ export async function deleteActivity(userId: string, entryId: string) {
 
   if (error) {
     console.error(error);
-    throw new Error('活動の削除に失敗しました');
+    throw new Error('豢ｻ蜍輔・蜑企勁縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   revalidatePath('/');
@@ -235,7 +246,7 @@ export async function fetchWeeklySelection(userId: string, year: number, isoWeek
 
   if (error) {
     console.error(error);
-    throw new Error('週次選定の取得に失敗しました');
+    throw new Error('騾ｱ谺｡驕ｸ螳壹・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   if (!data) return null;
@@ -270,7 +281,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
     return;
   }
   if (entryIds.length > MAX_WEEKLY_SELECTION) {
-    throw new Error(`選定できるのは最大${MAX_WEEKLY_SELECTION}件までです`);
+    throw new Error(`驕ｸ螳壹〒縺阪ｋ縺ｮ縺ｯ譛螟ｧ${MAX_WEEKLY_SELECTION}莉ｶ縺ｾ縺ｧ縺ｧ縺兪);
   }
 
   const supabase = createSupabaseServerActionClient();
@@ -288,7 +299,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
 
   if (error) {
     console.error(error);
-    throw new Error('週次選定の保存に失敗しました');
+    throw new Error('騾ｱ谺｡驕ｸ螳壹・菫晏ｭ倥↓螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   revalidatePath('/weekly');
@@ -324,8 +335,9 @@ export async function upsertWeeklyReflection(userId: string, year: number, isoWe
 
   if (error) {
     console.error(error);
-    throw new Error('週次振り返りの保存に失敗しました');
+    throw new Error('騾ｱ谺｡謖ｯ繧願ｿ斐ｊ縺ｮ菫晏ｭ倥↓螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   revalidatePath('/weekly');
 }
+

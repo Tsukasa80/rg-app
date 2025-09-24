@@ -30,7 +30,7 @@ export function Modal({ open, onClose, title, description, children, footer }: M
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 shadow-xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 shadow-xl">
         <button
           type="button"
           className="absolute right-4 top-4 text-slate-400 transition hover:text-white"
@@ -39,12 +39,12 @@ export function Modal({ open, onClose, title, description, children, footer }: M
         >
           ×
         </button>
-        <div className="px-6 pb-4 pt-6">
+        <div className="px-6 pb-4 pt-6 flex-shrink-0">
           <h2 className="text-xl font-semibold text-white">{title}</h2>
           {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
         </div>
-        <div className={cn('px-6 pb-6', footer ? 'space-y-4' : 'pb-8')}>{children}</div>
-        {footer ? <div className="flex justify-end gap-2 border-t border-slate-800 bg-slate-900/60 px-6 py-4">{footer}</div> : null}
+        <div className={cn('px-6 pb-6 overflow-y-auto', footer ? 'space-y-4' : 'pb-8')} style={{ maxHeight: '60vh' }}>{children}</div>
+        {footer ? <div className="flex justify-end gap-2 border-t border-slate-800 bg-slate-900/60 px-6 py-4 flex-shrink-0">{footer}</div> : null}
       </div>
     </div>
   );
