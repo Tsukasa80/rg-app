@@ -71,7 +71,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
 
   if (error) {
     console.error(error);
-    throw new Error('週次データの取得に失敗しました');
+    throw new Error('Failed to fetch weekly data');
   }
 
   const entries = data.map(mapEntry);
