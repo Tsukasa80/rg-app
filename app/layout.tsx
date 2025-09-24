@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" className={inter.variable}>
-      <body className="bg-slate-950 text-slate-100">
+      <body className={`${inter.className} bg-slate-950 text-slate-100`}>
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
           <PwaProvider />
           <GuestProvider />
