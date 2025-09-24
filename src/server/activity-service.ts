@@ -1,4 +1,4 @@
-ï»¿'use server';
+'use server';
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerActionClient, createSupabaseServerComponentClient } from '../lib/supabase-server';
@@ -44,8 +44,8 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
       if (filters?.types?.length && !filters.types.includes(row.type)) return false;
       if (filters?.tags?.length && !filters.tags.every((t) => row.tags.includes(t))) return false;
       if (filters?.energyScores?.length && !filters.energyScores.includes(row.energy_score as any)) return false;
-      if (filters?.from && row.occurred_at < filters.from) return false;
-      if (filters?.to && row.occurred_at > filters.to) return false;
+      const rowTs = new Date(row.occurred_at).getTime(); const fromTs = filters?.from ? new Date(filters.from).getTime() : null; if (fromTs !== null && rowTs < fromTs) return false;
+      const toTs = filters?.to ? new Date(filters.to).getTime() : null; if (toTs !== null && rowTs > toTs) return false;
       if (filters?.search) {
         const s = filters.search.toLowerCase();
         const inTitle = row.title.toLowerCase().includes(s);
@@ -81,7 +81,7 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
   const { data, error } = await query;
   if (error) {
     console.error(error);
-    throw new Error('æ´»å‹•ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('Šˆ“®‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
   }
   return data.map(mapEntry);
 }
@@ -121,7 +121,7 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
 
   if (error) {
     console.error(error);
-    throw new Error('æ´»å‹•ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('Šˆ“®‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   revalidatePath('/');
@@ -143,7 +143,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
     };
     const updated = LocalDB.updateEntry(entryId, patch);
     if (!updated || updated.user_id !== userId) {
-      throw new Error('ï¿½ï¿½ï¿½ï¿½ï¿½ÌXï¿½Vï¿½Éï¿½ï¿½sï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½');
+      throw new Error('??????X?V????s???????');
     }
     revalidatePath('/');
     revalidatePath('/history');
@@ -169,7 +169,7 @@ export async function updateActivity(userId: string, entryId: string, payload: P
 
   if (error) {
     console.error(error);
-    throw new Error('æ´»å‹•ã®æ›´æ–°ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('Šˆ“®‚ÌXV‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   revalidatePath('/');
@@ -183,7 +183,7 @@ export async function deleteActivity(userId: string, entryId: string) {
     const ok = LocalDB.deleteEntry(userId, entryId);
     if (!ok) {
       console.error('offline delete failed');
-      throw new Error('ï¿½ï¿½ï¿½ï¿½ï¿½Ìíœï¿½Éï¿½ï¿½sï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½');
+      throw new Error('???????????s???????');
     }
     revalidatePath('/');
     revalidatePath('/history');
@@ -198,7 +198,7 @@ export async function deleteActivity(userId: string, entryId: string) {
 
   if (error) {
     console.error(error);
-    throw new Error('æ´»å‹•ã®å‰Šé™¤ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('Šˆ“®‚Ìíœ‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   revalidatePath('/');
@@ -235,7 +235,7 @@ export async function fetchWeeklySelection(userId: string, year: number, isoWeek
 
   if (error) {
     console.error(error);
-    throw new Error('é€±æ¬¡é¸å®šã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('TŸ‘I’è‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   if (!data) return null;
@@ -270,7 +270,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
     return;
   }
   if (entryIds.length > MAX_WEEKLY_SELECTION) {
-    throw new Error(`é¸å®šã§ãã‚‹ã®ã¯æœ€å¤§${MAX_WEEKLY_SELECTION}ä»¶ã¾ã§ã§ã™`);
+    throw new Error(`‘I’è‚Å‚«‚é‚Ì‚ÍÅ‘å${MAX_WEEKLY_SELECTION}Œ‚Ü‚Å‚Å‚·`);
   }
 
   const supabase = createSupabaseServerActionClient();
@@ -288,7 +288,7 @@ export async function upsertWeeklySelection(userId: string, year: number, isoWee
 
   if (error) {
     console.error(error);
-    throw new Error('é€±æ¬¡é¸å®šã®ä¿å­˜ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('TŸ‘I’è‚Ì•Û‘¶‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   revalidatePath('/weekly');
@@ -324,7 +324,7 @@ export async function upsertWeeklyReflection(userId: string, year: number, isoWe
 
   if (error) {
     console.error(error);
-    throw new Error('é€±æ¬¡æŒ¯ã‚Šè¿”ã‚Šã®ä¿å­˜ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('TŸU‚è•Ô‚è‚Ì•Û‘¶‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   revalidatePath('/weekly');

@@ -1,4 +1,4 @@
-ï»¿'use server';
+'use server';
 
 import { createSupabaseServerComponentClient } from '../lib/supabase-server';
 import { LocalDB, OFFLINE_MODE } from '../lib/local-db';
@@ -24,7 +24,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
   if (OFFLINE_MODE) {
     const rows = LocalDB
       .listEntries(userId)
-      .filter((r) => r.occurred_at >= from && r.occurred_at <= to)
+      .filter((r) => { const t = new Date(r.occurred_at).getTime(); const f = new Date(from).getTime(); const tt = new Date(to).getTime(); return t >= f && t <= tt; })
       .sort((a, b) => (a.occurred_at < b.occurred_at ? -1 : 1));
     const entries = rows.map(mapEntry);
     const energyScores = entries.map((entry) => entry.energyScore);
@@ -71,7 +71,7 @@ export async function fetchWeeklySummary(userId: string, from: string, to: strin
 
   if (error) {
     console.error(error);
-    throw new Error('é€±æ¬¡ãƒ‡ãƒ¼ã‚¿ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
+    throw new Error('TŸƒf[ƒ^‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½');
   }
 
   const entries = data.map(mapEntry);

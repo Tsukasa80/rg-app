@@ -33,7 +33,8 @@ const defaultValues: ActivityEntryFormValues = {
   energyScore: 2,
   tags: [],
   durationMin: undefined,
-  occurredAt: formatIsoDateTime(new Date())
+  // 正規化してサーバー側のフィルタ（文字列比較）と整合させる
+  occurredAt: new Date().toISOString()
 };
 
 export function ActivityEntryForm({ initialValues, onSubmit, submitting }: ActivityEntryFormProps) {
