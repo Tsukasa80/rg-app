@@ -1,4 +1,4 @@
-import { endOfMonth, startOfMonth } from 'date-fns';
+import { endOfMonth, startOfMonth, formatISO } from 'date-fns';
 import { getUserIdOrGuest } from '@/server/session';
 import { isoWeekIdentifier, isoWeekRange } from '@/lib/utils';
 import { fetchWeeklySummary } from '@/server/analytics-service';
@@ -17,8 +17,8 @@ export default async function DashboardPage() {
   const monthEnd = endOfMonth(now);
   let monthly: any = { summary: { greenCount: 0, redCount: 0, averageEnergy: 0, medianEnergy: 0, durationMinutes: 0, topTags: [] }, entries: [] };
   try {
-    weekly = await fetchWeeklySummary(userId, weekRange.start.toISOString(), weekRange.end.toISOString());
-    monthly = await fetchWeeklySummary(userId, monthStart.toISOString(), monthEnd.toISOString());
+    weekly = await fetchWeeklySummary(userId, formatISO(weekRange.start), formatISO(weekRange.end));
+    monthly = await fetchWeeklySummary(userId, formatISO(monthStart), formatISO(monthEnd));
   } catch (e) {
     console.error('DashboardPage load failed:', e);
   }

@@ -34,7 +34,7 @@ const defaultValues: ActivityEntryFormValues = {
   tags: [],
   durationMin: undefined,
   // 正規化してサーバー側のフィルタ（文字列比較）と整合させる
-  occurredAt: new Date().toISOString()
+  occurredAt: formatIsoDateTime(new Date())
 };
 
 export function ActivityEntryForm({ initialValues, onSubmit, submitting }: ActivityEntryFormProps) {
@@ -125,7 +125,7 @@ export function ActivityEntryForm({ initialValues, onSubmit, submitting }: Activ
             type="datetime-local"
             value={values.occurredAt.slice(0, 16)}
             onChange={(event) =>
-              setValues((prev) => ({ ...prev, occurredAt: new Date(event.target.value).toISOString() }))
+              setValues((prev) => ({ ...prev, occurredAt: formatIsoDateTime(new Date(event.target.value)) }))
             }
           />
         </div>

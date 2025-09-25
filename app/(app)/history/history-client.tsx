@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
+import { formatISO } from 'date-fns';
 import { ActivityList } from '@/components/activity-list';
 import { HistoryFilters } from '@/components/history-filters';
 import type { ActivityEntry } from '@/lib/types';
@@ -30,8 +31,8 @@ export function HistoryClient({ userId, initialEntries, initialRange }: HistoryC
   const refresh = useCallback(() => {
     startTransition(async () => {
       const next = await fetchActivities(userId, {
-        from: state.from ? new Date(`${state.from}T00:00:00`).toISOString() : undefined,
-        to: state.to ? new Date(`${state.to}T23:59:59`).toISOString() : undefined,
+        from: state.from ? formatISO(new Date(`${state.from}T00:00:00`)) : undefined,
+        to: state.to ? formatISO(new Date(`${state.to}T23:59:59`)) : undefined,
         types: state.types,
         energyScores: state.energyScores,
         tags: state.tags,

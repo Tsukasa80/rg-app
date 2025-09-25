@@ -3,7 +3,10 @@ import path from 'path';
 import os from 'os';
 import { randomUUID } from 'crypto';
 
-export const OFFLINE_MODE = !process.env.NEXT_PUBLIC_SUPABASE_URL || /example\./i.test(process.env.NEXT_PUBLIC_SUPABASE_URL);
+export const OFFLINE_MODE =
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  /example\./i.test(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+  process.env.NEXT_PUBLIC_DISABLE_AUTH === '1';
 
 // Vercel などのサーバーレス環境では /tmp のみ書き込み可能
 // 本番や Vercel 環境では /tmp 配下を使用し、ローカル開発では ./.data を使用

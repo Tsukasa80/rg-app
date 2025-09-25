@@ -1,6 +1,6 @@
 import { getUserIdOrGuest } from '@/server/session';
 import { fetchActivities } from '@/server/activity-service';
-import { formatIsoDate } from '@/lib/utils';
+import { formatIsoDate, formatIsoDateTime } from '@/lib/utils';
 import { HistoryClient } from './history-client';
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +12,8 @@ export default async function HistoryPage() {
   let initialEntries = [] as any[];
   try {
     initialEntries = await fetchActivities(userId, {
-      from: new Date(from).toISOString(),
-      to: new Date(`${to}T23:59:59`).toISOString()
+      from: formatIsoDateTime(new Date(from)),
+      to: formatIsoDateTime(new Date(`${to}T23:59:59`))
     });
   } catch (e) {
     console.error('HistoryPage load failed:', e);
