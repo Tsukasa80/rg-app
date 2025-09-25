@@ -11,7 +11,8 @@ export const OFFLINE_MODE =
 // Vercel などのサーバーレス環境では /tmp のみ書き込み可能
 // 本番や Vercel 環境では /tmp 配下を使用し、ローカル開発では ./.data を使用
 const isVercel = !!process.env.VERCEL;
-const defaultDataDir = isVercel || process.env.NODE_ENV === 'production'
+// Use /tmp only on Vercel. Else persist under project ./.data even in production
+const defaultDataDir = isVercel
   ? path.join(os.tmpdir(), 'rg-app-data')
   : path.join(process.cwd(), '.data');
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : defaultDataDir;

@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ActivityFilterState } from '../lib/types';
 import { formatIsoDate } from '../lib/utils';
 
@@ -21,11 +22,20 @@ const initialState: ActivityFilterState = {
   search: ''
 };
 
-const useActivityFilterStore = create<ActivityFilterStore>((set) => ({
-  state: initialState,
-  setState: (update) => set((prev) => ({ state: { ...prev.state, ...update } })),
-  reset: () => set({ state: initialState })
-}));
+const useActivityFilterStore = create<ActivityFilterStore>()(
+  persist(
+    (set) => ({
+      state: initialState,
+      setState: (update) => set((prev) => ({ state: { ...prev.state, ...update } })),
+      reset: () => set({ state: initialState })
+    }),
+    {
+      name: 'activity-filter-store-v1',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (store) => ({ state: store.state })
+    }
+  )
+);
 
 export function useActivityFilters() {
   const state = useActivityFilterStore((store) => store.state);
