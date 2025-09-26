@@ -17,7 +17,7 @@ export default async function DebugPage() {
   let entriesCount: number | null = null;
   let dbError: string | null = null;
   try {
-    if (hasEnv) {
+    if (hasEnv && !OFFLINE_MODE) {
       const supabase = createSupabaseServerComponentClient();
       const { count, error } = await supabase
         .from('activity_entries')
@@ -66,4 +66,3 @@ export default async function DebugPage() {
     </div>
   );
 }
-

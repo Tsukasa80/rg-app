@@ -60,38 +60,47 @@ export async function fetchActivities(userId: string, filters?: Partial<Activity
     });
     return filtered.map(mapEntry);
   }
-  const supabase = createSupabaseServerComponentClient();
-  let query = supabase
-    .from("activity_entries")
-    .select("*")
-    .eq("user_id", userId)
-    .order("occurred_at", { ascending: false });
+  try {
+    const supabase = createSupabaseServerComponentClient();
+    let query = supabase
+      .from("activity_entries")
+      .select("*")
+      .eq("user_id", userId)
+      .order("occurred_at", { ascending: false });
 
-  if (filters?.types?.length) {
-    query = query.in("type", filters.types);
-  }
-  if (filters?.tags?.length) {
-    query = query.contains("tags", filters.tags);
-  }
-  if (filters?.energyScores?.length) {
-    query = query.in("energy_score", filters.energyScores as any);
-  }
-  if (filters?.from) {
-    query = query.gte("occurred_at", filters.from);
-  }
-  if (filters?.to) {
-    query = query.lte("occurred_at", filters.to);
-  }
-  if (filters?.search) {
-    query = query.or(`title.ilike.%${filters.search}%,note.ilike.%${filters.search}%`);
-  }
+    if (filters?.types?.length) {
+      query = query.in("type", filters.types);
+    }
+    if (filters?.tags?.length) {
+      query = query.contains("tags", filters.tags);
+    }
+    if (filters?.energyScores?.length) {
+      query = query.in("energy_score", filters.energyScores as any);
+    }
+    if (filters?.from) {
+      query = query.gte("occurred_at", filters.from);
+    }
+    if (filters?.to) {
+      query = query.lte("occurred_at", filters.to);
+    }
+    if (filters?.search) {
+      query = query.or(`title.ilike.%${filters.search}%,note.ilike.%${filters.search}%`);
+    }
 
-  const { data, error } = await query;
-  if (error) {
-    console.error(error);
-    throw new Error("Failed to fetch activities");
+    const { data, error } = await query;
+    if (error) {
+      console.error(error);
+      // Fallback to local store on DB error
+      const rows = LocalDB.listEntries(userId).sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+      return rows.map(mapEntry);
+    }
+    return (data as any[]).map(mapEntry);
+  } catch (e) {
+    console.error(e);
+    // Network or client failure: fallback to local
+    const rows = LocalDB.listEntries(userId).sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+    return rows.map(mapEntry);
   }
-  return (data as any[]).map(mapEntry);
 }
 
 export async function createActivity(userId: string, payload: ActivityPayload) {
@@ -121,10 +130,35 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
     revalidatePath("/weekly");
     return mapEntry(row);
   }
-  const supabase = createSupabaseServerActionClient();
-  const { data, error } = await (supabase.from as any)("activity_entries")
-    .insert(
-      {
+  try {
+    const supabase = createSupabaseServerActionClient();
+    const { data, error } = await (supabase.from as any)("activity_entries")
+      .insert(
+        {
+          user_id: userId,
+          occurred_at: payload.occurredAt,
+          type: payload.type,
+          title: payload.title,
+          note: payload.note,
+          energy_score: payload.energyScore,
+          duration_min: payload.durationMin,
+          tags: payload.tags,
+        } as any
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      // Fallback to local persistence
+      try {
+        const store = cookies();
+        const has = store.get("guest_id")?.value;
+        if (!has && userId?.startsWith("guest_")) {
+          store.set("guest_id", userId, { path: "/", sameSite: "lax", httpOnly: false, maxAge: 60 * 60 * 24 * 365 });
+        }
+      } catch {}
+      const row = LocalDB.insertEntry({
         user_id: userId,
         occurred_at: payload.occurredAt,
         type: payload.type,
@@ -133,20 +167,44 @@ export async function createActivity(userId: string, payload: ActivityPayload) {
         energy_score: payload.energyScore,
         duration_min: payload.durationMin,
         tags: payload.tags,
-      } as any
-    )
-    .select()
-    .single();
+        updated_at: undefined,
+      });
+      revalidatePath("/");
+      revalidatePath("/history");
+      revalidatePath("/weekly");
+      return mapEntry(row);
+    }
 
-  if (error) {
-    console.error(error);
-    throw new Error("Failed to create activity");
+    revalidatePath("/");
+    revalidatePath("/history");
+    revalidatePath("/weekly");
+    return mapEntry(data);
+  } catch (e) {
+    console.error(e);
+    // Network/client failure: fallback to local persistence
+    try {
+      const store = cookies();
+      const has = store.get("guest_id")?.value;
+      if (!has && userId?.startsWith("guest_")) {
+        store.set("guest_id", userId, { path: "/", sameSite: "lax", httpOnly: false, maxAge: 60 * 60 * 24 * 365 });
+      }
+    } catch {}
+    const row = LocalDB.insertEntry({
+      user_id: userId,
+      occurred_at: payload.occurredAt,
+      type: payload.type,
+      title: payload.title,
+      note: payload.note,
+      energy_score: payload.energyScore,
+      duration_min: payload.durationMin,
+      tags: payload.tags,
+      updated_at: undefined,
+    });
+    revalidatePath("/");
+    revalidatePath("/history");
+    revalidatePath("/weekly");
+    return mapEntry(row);
   }
-
-  revalidatePath("/");
-  revalidatePath("/history");
-  revalidatePath("/weekly");
-  return mapEntry(data);
 }
 
 export async function updateActivity(userId: string, entryId: string, payload: Partial<ActivityPayload>) {
