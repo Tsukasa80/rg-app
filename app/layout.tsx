@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { PwaProvider } from '@/components/pwa-provider';
 import { GuestProvider } from '@/components/guest-provider';
+import { EnsureGuestId } from '@/components/ensure-guest-id';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
           <PwaProvider />
           <GuestProvider />
+          <EnsureGuestId />
           {children}
         </div>
       </body>
